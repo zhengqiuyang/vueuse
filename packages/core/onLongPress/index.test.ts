@@ -227,6 +227,15 @@ describe('onLongPress', () => {
 
       it('should trigger longpress if pointer is moved', () => triggerCallbackWithThreshold(isRef))
 
+      it('should reserve the touch gesture on the element (#4585)', () => {
+        onLongPress(isRef ? element : element.value, vi.fn(), { distanceThreshold: 100, delay: 1000 })
+
+        // The browser takes touch gestures for scrolling and fires
+        // pointercancel on the first wiggle, bypassing distanceThreshold.
+        // Reserving the gesture keeps the threshold in charge on touch.
+        expect(element.value.style.touchAction).toBe('none')
+      })
+
       it('should trigger onMouseUp when pointer is released', () => triggerOnMouseUp(isRef))
 
       it('should not trigger longpress when the pointer is canceled', () => notTriggerCallbackOnPointerCancel(isRef))

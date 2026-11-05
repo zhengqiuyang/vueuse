@@ -1,7 +1,7 @@
 import type { TimerHandle } from '@vueuse/shared'
 import type { Position } from '../types'
 import type { MaybeElementRef } from '../unrefElement'
-import { computed } from 'vue'
+import { computed, watchEffect } from 'vue'
 import { unrefElement } from '../unrefElement'
 import { useEventListener } from '../useEventListener'
 
@@ -53,6 +53,14 @@ export function onLongPress(
   options?: OnLongPressOptions,
 ): OnLongPressReturn {
   const elementRef = computed(() => unrefElement(target))
+
+  // Touch: reserve the gesture for the long press. Without this the browser
+  // takes over the gesture for scrolling and fires pointercancel on the first
+  // wiggle, bypassing distanceThreshold entirely (#4585). Same reservation
+  // pattern as usePointerSwipe's touch-action setup.
+  watchEffect(() => {
+    elementRef.value?.style?.setProperty('touch-action', 'none')
+  })
 
   let timeout: TimerHandle
   let posStart: Position | undefined
